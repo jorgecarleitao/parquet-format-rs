@@ -81,6 +81,7 @@ where
         }
     }
 
+    #[inline]
     fn read_list_set_begin(&mut self) -> Result<(TType, i32)> {
         let header = self.read_byte()?;
         let element_type = collection_u8_to_type(header & 0x0F)?;
@@ -102,6 +103,7 @@ impl<T> TInputProtocol for TCompactInputProtocol<T>
 where
     T: TReadTransport,
 {
+    #[inline]
     fn read_message_begin(&mut self) -> Result<TMessageIdentifier> {
         let compact_id = self.read_byte()?;
         if compact_id != COMPACT_PROTOCOL_ID {
@@ -142,16 +144,19 @@ where
         ))
     }
 
+    #[inline]
     fn read_message_end(&mut self) -> Result<()> {
         Ok(())
     }
 
+    #[inline]
     fn read_struct_begin(&mut self) -> Result<Option<TStructIdentifier>> {
         self.read_field_id_stack.push(self.last_read_field_id);
         self.last_read_field_id = 0;
         Ok(None)
     }
 
+    #[inline]
     fn read_struct_end(&mut self) -> Result<()> {
         self.last_read_field_id = self
             .read_field_id_stack
@@ -160,6 +165,7 @@ where
         Ok(())
     }
 
+    #[inline]
     fn read_field_begin(&mut self) -> Result<TFieldIdentifier> {
         // we can read at least one byte, which is:
         // - the type
@@ -202,10 +208,12 @@ where
         }
     }
 
+    #[inline]
     fn read_field_end(&mut self) -> Result<()> {
         Ok(())
     }
 
+    #[inline]
     fn read_bool(&mut self) -> Result<bool> {
         match self.pending_read_bool_value.take() {
             Some(b) => Ok(b),
@@ -223,6 +231,7 @@ where
         }
     }
 
+    #[inline]
     fn read_bytes(&mut self) -> Result<Vec<u8>> {
         let len = self.transport.read_varint::<u32>()?;
         let mut buf = vec![0u8; len as usize];
@@ -232,51 +241,62 @@ where
             .map(|_| buf)
     }
 
+    #[inline]
     fn read_i8(&mut self) -> Result<i8> {
         self.read_byte().map(|i| i as i8)
     }
 
+    #[inline]
     fn read_i16(&mut self) -> Result<i16> {
         self.transport.read_varint::<i16>().map_err(From::from)
     }
 
+    #[inline]
     fn read_i32(&mut self) -> Result<i32> {
         self.transport.read_varint::<i32>().map_err(From::from)
     }
 
+    #[inline]
     fn read_i64(&mut self) -> Result<i64> {
         self.transport.read_varint::<i64>().map_err(From::from)
     }
 
+    #[inline]
     fn read_double(&mut self) -> Result<f64> {
         self.transport
             .read_f64::<LittleEndian>()
             .map_err(From::from)
     }
 
+    #[inline]
     fn read_string(&mut self) -> Result<String> {
         let bytes = self.read_bytes()?;
         String::from_utf8(bytes).map_err(From::from)
     }
 
+    #[inline]
     fn read_list_begin(&mut self) -> Result<TListIdentifier> {
         let (element_type, element_count) = self.read_list_set_begin()?;
         Ok(TListIdentifier::new(element_type, element_count))
     }
 
+    #[inline]
     fn read_list_end(&mut self) -> Result<()> {
         Ok(())
     }
 
+    #[inline]
     fn read_set_begin(&mut self) -> Result<TSetIdentifier> {
         let (element_type, element_count) = self.read_list_set_begin()?;
         Ok(TSetIdentifier::new(element_type, element_count))
     }
 
+    #[inline]
     fn read_set_end(&mut self) -> Result<()> {
         Ok(())
     }
 
+    #[inline]
     fn read_map_begin(&mut self) -> Result<TMapIdentifier> {
         let element_count = self.transport.read_varint::<u32>()? as i32;
         if element_count == 0 {
@@ -289,6 +309,7 @@ where
         }
     }
 
+    #[inline]
     fn read_map_end(&mut self) -> Result<()> {
         Ok(())
     }
@@ -296,6 +317,7 @@ where
     // utility
     //
 
+    #[inline]
     fn read_byte(&mut self) -> Result<u8> {
         let mut buf = [0u8; 1];
         self.transport
@@ -614,6 +636,7 @@ impl TOutputProtocolFactory for TCompactOutputProtocolFactory {
     }
 }
 
+#[inline]
 pub(super) fn collection_type_to_u8(field_type: TType) -> u8 {
     match field_type {
         TType::Bool => 0x01,
@@ -621,6 +644,7 @@ pub(super) fn collection_type_to_u8(field_type: TType) -> u8 {
     }
 }
 
+#[inline]
 pub(super) fn type_to_u8(field_type: TType) -> u8 {
     match field_type {
         TType::Stop => 0x00,
@@ -638,6 +662,7 @@ pub(super) fn type_to_u8(field_type: TType) -> u8 {
     }
 }
 
+#[inline]
 pub(super) fn collection_u8_to_type(b: u8) -> Result<TType> {
     match b {
         0x01 => Ok(TType::Bool),
@@ -645,6 +670,7 @@ pub(super) fn collection_u8_to_type(b: u8) -> Result<TType> {
     }
 }
 
+#[inline]
 pub(super) fn u8_to_type(b: u8) -> Result<TType> {
     match b {
         0x00 => Ok(TType::Stop),
